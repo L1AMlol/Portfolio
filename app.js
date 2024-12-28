@@ -1,4 +1,4 @@
-let topZIndex = 0;
+let topZIndex = 5;
 const windows = document.querySelectorAll('.window');
 const desktop = document.querySelector('.desktop');
 const dayTxt = document.querySelector('.day-text');
@@ -7,7 +7,7 @@ const timeTxt = document.querySelector('.time-text');
 
 function openWindow(windowId) {
   const win = document.getElementById(windowId);
-  win.classList.remove('hidden')
+  win.classList.remove('hidden');
   topZIndex += 1;
   win.style.zIndex = `${topZIndex}`;
 }
@@ -23,6 +23,10 @@ windows.forEach((win) => {
   let offsetX, offsetY;
   let startWidth, startHeight;
   let startMouseX, startMouseY;
+  let previousLeft = 0;
+  let previousTop = 0;
+  let previousWidth = 0;
+  let previousHeight = 0;
 
   win.addEventListener('mousedown', () => {
     topZIndex += 1;
@@ -34,8 +38,23 @@ windows.forEach((win) => {
   });
 
   maximizeBtn.addEventListener('click', (e) => {
-    // TODO: maximize window
-    console.log('maximize window');
+    win.classList.toggle('maximized');
+    if (win.classList.contains('maximized')) {
+      previousWidth = win.offsetWidth;
+      previousHeight = win.offsetHeight;
+      previousLeft = win.style.left;
+      previousTop = win.style.top;
+
+      win.style.top = 0;
+      win.style.left = 0;
+      win.style.width = '100vw';
+      win.style.height = '100vh';
+    } else {
+      win.style.top = previousTop;
+      win.style.left = previousLeft;
+      win.style.width = `${previousWidth}px`;
+      win.style.height = `${previousHeight}px`;
+    }
   });
 
   titleBar.addEventListener('mousedown', (e) => {

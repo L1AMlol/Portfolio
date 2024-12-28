@@ -26,6 +26,30 @@ main {
     position: relative;
 }
 
+/* --- Desktop --- */
+
+.desktop-shortcuts {
+    padding-left: 20px;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    width: 100px;
+    height: 100%;
+    justify-content: top;
+    gap: 100px;
+}
+
+.desktop-shortcuts button {
+    aspect-ratio: 1/1;
+    background: #888888;
+    border: none;
+    border-radius: 3px;
+}
+.desktop-shortcuts button:hover {
+    background: #4f4f4f;
+
+}
+
 /* --- WINDOWS --- */
 
 .window {
@@ -119,6 +143,7 @@ main {
 /* --- CENTER TEXT --- */
 
 .center-text {
+    z-index: -1;
     position: absolute;
     top: 10%;
     width: 100%;
@@ -150,3 +175,4 @@ main {
 .hidden {
     display: none;
 }
+
