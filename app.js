@@ -4,6 +4,9 @@ const desktop = document.querySelector('.desktop');
 const dayTxt = document.querySelector('.day-text');
 const dateTxt = document.querySelector('.date-text');
 const timeTxt = document.querySelector('.time-text');
+const startMenu = document.getElementById('start-menu');
+const clockMenu = document.getElementById('clock-menu');
+const volumeMenu = document.getElementById('volume-menu');
 
 function openWindow(windowId) {
   const win = document.getElementById(windowId);
@@ -28,15 +31,19 @@ windows.forEach((win) => {
   let previousWidth = 0;
   let previousHeight = 0;
 
+  // add window to the top when clicked
   win.addEventListener('mousedown', () => {
+    clickedOutsideTaskbar();
     topZIndex += 1;
     win.style.zIndex = `${topZIndex}`;
   });
 
+  // closes the window
   closeBtn.addEventListener('click', (e) => {
     win.classList.add('hidden');
   });
 
+  // maximizes the window
   maximizeBtn.addEventListener('click', (e) => {
     win.classList.toggle('maximized');
     if (win.classList.contains('maximized')) {
@@ -57,18 +64,26 @@ windows.forEach((win) => {
     }
   });
 
-  titleBar.addEventListener('mousedown', (e) => {
+  function mouseDown(e) {
+    // Use the first touch point for touchscreen or the mouse event position
+    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
     isDragging = true;
-    offsetX = e.clientX - win.offsetLeft;
-    offsetY = e.clientY - win.offsetTop;
+    offsetX = clientX - win.offsetLeft;
+    offsetY = clientY - win.offsetTop;
     document.body.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
-  });
+  }
 
-  document.addEventListener('mousemove', (e) => {
+  function mouseMove(e) {
     if (isDragging) {
-      let x = e.clientX - offsetX;
-      let y = e.clientY - offsetY;
+      // Use the first touch point for touchscreen or the mouse event position
+      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+      let x = clientX - offsetX;
+      let y = clientY - offsetY;
 
       // Ensure the window stays within the desktop bounds
       x = Math.max(0, Math.min(x, desktop.clientWidth - win.offsetWidth));
@@ -77,35 +92,111 @@ windows.forEach((win) => {
       win.style.left = `${x}px`;
       win.style.top = `${y}px`;
     } else if (isResizing) {
-      const deltaX = e.clientX - startMouseX;
-      const deltaY = e.clientY - startMouseY;
+      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+      const deltaX = clientX - startMouseX;
+      const deltaY = clientY - startMouseY;
 
       win.style.width = `${startWidth + deltaX}px`;
       win.style.height = `${startHeight + deltaY}px`;
     }
-  });
+  }
 
-  document.addEventListener('mouseup', () => {
+  function mouseUp(e) {
     isDragging = false;
     isResizing = false;
     document.body.style.cursor = 'default';
     document.body.style.userSelect = '';
-  });
+  }
 
-  resizeHandle.addEventListener('mousedown', (e) => {
+  function resize(e) {
+    // Use the first touch point for touchscreen or the mouse event position
+    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
     e.stopPropagation(); // Prevent triggering drag
     isResizing = true;
     startWidth = win.offsetWidth;
     startHeight = win.offsetHeight;
-    startMouseX = e.clientX;
-    startMouseY = e.clientY;
+    startMouseX = clientX;
+    startMouseY = clientY;
     document.body.style.cursor = 'se-resize';
-  });
+  }
+
+  function checkIfWindowsInView() {
+    windows.forEach((win) => {
+      const rect = win.getBoundingClientRect();
+      let newLeft = parseInt(win.style.left || rect.left, 10);
+      let newTop = parseInt(win.style.top || rect.top, 10);
+
+      if (rect.right > desktop.clientWidth) {
+        newLeft = Math.max(0, desktop.clientWidth - rect.width);
+      }
+      if (rect.bottom > desktop.clientHeight) {
+        newTop = Math.max(0, desktop.clientHeight - rect.height);
+      }
+      if (rect.left < 0) {
+        newLeft = 0;
+      }
+      if (rect.top < 0) {
+        newTop = 0;
+      }
+
+      win.style.left = `${newLeft}px`;
+      win.style.top = `${newTop}px`;
+    });
+  }
+
+  // Check if the window is still in vieuw after resizing and move it if not
+  window.addEventListener('resize', checkIfWindowsInView);
+
+  // initiate window move
+  titleBar.addEventListener('mousedown', mouseDown);
+  titleBar.addEventListener('touchstart', mouseDown);
+
+  // move window
+  document.addEventListener('mousemove', mouseMove);
+  document.addEventListener('touchmove', mouseMove);
+
+  // stop window move
+  document.addEventListener('mouseup', mouseUp);
+  document.addEventListener('touchend', mouseUp);
+
+  // resize
+  resizeHandle.addEventListener('mousedown', resize);
+  resizeHandle.addEventListener('touchstart', resize);
 });
 
-// format center text
-setInterval(() => {
-  // runs every second
+function openTaskbarMenu(menuId) {
+  const menu = document.getElementById(menuId);
+  menu.classList.toggle('hidden');
+  closeTaskbarMenu(menu);
+}
+
+function closeTaskbarMenu(menuId = null) {
+  menus = [startMenu, clockMenu, volumeMenu];
+
+  menus.forEach((menu) => {
+    if (menu != menuId) {
+      menu.classList.add('hidden');
+    }
+  });
+}
+
+function openStartMenu() {
+  startMenu.classList.toggle('hidden');
+}
+
+function clickedOutsideTaskbar() {
+  closeTaskbarMenu();
+}
+
+function openClock() {
+  clockMenu.classList.toggle('hidden');
+}
+
+function getTimeData() {
   const date = new Date();
   const dateInfo = {
     day: date.getDay(),
@@ -115,32 +206,34 @@ setInterval(() => {
     hour: date.getHours(),
     minutes: date.getMinutes(),
     seconds: date.getSeconds(),
+    days: [
+      'MONDAY',
+      'TUESDAY',
+      'WEDNESDAY',
+      'THURSDAY',
+      'FRIDAY',
+      'SATURDAY',
+      'SUNDAY',
+    ],
+    months: [
+      'JANUARY',
+      'FEBUARY',
+      'MARCH',
+      'APRIL',
+      'MAY',
+      'JUNE',
+      'JULY',
+      'AUGUST',
+      'SEPTEMBER',
+      'OCTOBER',
+      'NOVEMBER',
+      'DECEMBER',
+    ],
   };
-  const days = [
-    'MONDAY',
-    'TUESDAY',
-    'WEDNESDAY',
-    'THURSDAY',
-    'FRIDAY',
-    'SATURDAY',
-    'SUNDAY',
-  ];
-  const months = [
-    'JANUARY',
-    'FEBUARY',
-    'MARCH',
-    'APRIL',
-    'MAY',
-    'JUNE',
-    'JULY',
-    'AUGUST',
-    'SEPTEMBER',
-    'OCTOBER',
-    'NOVEMBER',
-    'DECEMBER',
-  ];
+  return dateInfo;
+}
 
-  // if the number is a sigle digit add a 0 in front of it
+function formatCenterText(dateInfo) {
   let dateNumber =
     dateInfo.date < 10 ? '0' + `${dateInfo.date}` : `${dateInfo.date}`;
   let hour = dateInfo.hour < 10 ? '0' + `${dateInfo.hour}` : `${dateInfo.hour}`;
@@ -149,9 +242,25 @@ setInterval(() => {
   let seconds =
     dateInfo.seconds < 10 ? '0' + `${dateInfo.seconds}` : `${dateInfo.seconds}`;
 
-  dayTxt.innerHTML = days[dateInfo.day];
-  dateTxt.innerHTML = `${dateNumber} ${months[dateInfo.month]}, ${
+  dayTxt.innerHTML = dateInfo.days[dateInfo.day - 1];
+  dateTxt.innerHTML = `${dateNumber} ${dateInfo.months[dateInfo.month]}, ${
     dateInfo.year
   }`;
   timeTxt.innerHTML = `- ${hour}:${minutes}:${seconds} -`;
+}
+
+function formatClockIcon(dateInfo) {
+  document.querySelector(
+    '.tray-icon-hour'
+  ).innerHTML = `${dateInfo.hour}:${dateInfo.minutes}`;
+  document.querySelector(
+    '.tray-icon-date'
+  ).innerHTML = `${dateInfo.date}/${dateInfo.month}/${dateInfo.year}`;
+}
+
+setInterval(() => {
+  // runs every second
+  dateInfo = getTimeData();
+  formatCenterText(dateInfo);
+  formatClockIcon(dateInfo);
 }, 1000);
