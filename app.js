@@ -116,6 +116,7 @@ windows.forEach((win) => {
     const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
 
     e.stopPropagation(); // Prevent triggering drag
+    e.preventDefault(); // Prevent default actions (e.g., text selection)
     isResizing = true;
     startWidth = win.offsetWidth;
     startHeight = win.offsetHeight;
