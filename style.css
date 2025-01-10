@@ -63,6 +63,7 @@ main {
 .window {
     width: 300px;
     height: 400px;
+    min-width: 120px;
     position: absolute;
     top: 50px;
     left: 50px;
@@ -100,6 +101,7 @@ main {
     overflow: auto;
     height: calc(100% - var(--titlebarheight));
     /* height: 100%; */
+    padding: 5%;
     overflow-y: scroll;
 }
 
@@ -248,5 +250,15 @@ main {
 
 .hidden {
     display: none;
+}
+
+.img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    height: auto;
+    max-height: 300px;
+    object-fit: cover;
+    object-position: center;
+    
 }
 
