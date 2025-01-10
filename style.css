@@ -6,6 +6,10 @@
     font-family: Quicksand;
     src: url("assets/fonts/Quicksand.otf");
 }
+@font-face {
+    font-family: Pixel;
+    src: url("assets/fonts/PressStart2P.ttf");
+}
 
 :root {
     --taskbar-height: 40px;
@@ -20,7 +24,7 @@
 
 body {
     font-family: Arial, sans-serif;
-    background: url("assets/pictures/windowsWallpaper.png");
+    background: url("assets/pictures/background/japan_gray.gif");
     background-size: cover;
     background-position: center;
     overflow: hidden;
@@ -47,21 +51,24 @@ main {
     display: flex;
     flex-direction: column;
     width: 100px;
-    /* height: 100%; */
     justify-content: top;
     gap: 100px;
 }
 
-.desktop-shortcuts button {
+.desktop-shortcut {
     aspect-ratio: 1/1;
-    background: #888888;
+    background: #ffffff77;
     border: none;
     border-radius: 3px;
 }
-.desktop-shortcuts button:hover {
-    background: #4f4f4f;
+.desktop-shortcut:hover {
+    background: #ffffffb9;
 
 }
+
+.desktop-shortcut.highlight {
+    background-color: #ffffffb9;
+  }
 
 /* --- WINDOWS --- */
 
@@ -93,10 +100,6 @@ main {
     margin: 2px;
     cursor: default;
 }
-
-/* .title-bar .window-name {
-
-} */
 
 .title-bar .options {
     display: flex;
@@ -132,10 +135,7 @@ main {
     position: absolute;
     bottom: 0;
     left: 0;
-    /* backdrop-filter: blur(10px); */
     display: flex;
-    /* align-items: center; */
-
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
 }
 
@@ -232,21 +232,21 @@ main {
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    
+    text-shadow: #333 3px 3px;
 }
 
 .day-text {
     font-size: 100px;
-    font-family: Anurati, sans-serif;
+    font-family: Pixel, sans-serif;
 }
 
 .date-text {
-    font-family: Quicksand, sans-serif;
+    font-family: Pixel, sans-serif;
     font-size: 20px;
 }
 
 .time-text {
-    font-family: Quicksand, sans-serif;
+    font-family: Pixel, sans-serif;
     font-size: 16px;
 }
 
@@ -264,5 +264,13 @@ main {
     object-fit: cover;
     object-position: center;
     
+}
+
+.selection-box {
+    position: absolute;
+    border: 1px dashed #000;
+    background: rgba(0, 145, 255, 0.2);
+    pointer-events: none;
+    z-index: 1;
 }
 

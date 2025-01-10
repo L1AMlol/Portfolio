@@ -77,11 +77,9 @@ windows.forEach((win) => {
   }
 
   function mouseMove(e) {
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
     if (isDragging) {
-      // Use the first touch point for touchscreen or the mouse event position
-      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-
       let x = clientX - offsetX;
       let y = clientY - offsetY;
 
@@ -92,9 +90,6 @@ windows.forEach((win) => {
       win.style.left = `${x}px`;
       win.style.top = `${y}px`;
     } else if (isResizing) {
-      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-
       const deltaX = clientX - startMouseX;
       const deltaY = clientY - startMouseY;
 
@@ -265,3 +260,105 @@ setInterval(() => {
   formatCenterText(dateInfo);
   formatClockIcon(dateInfo);
 }, 1000);
+
+function startSelectionbox(e) {
+  document.querySelectorAll('.highlight').forEach((highlightedElement) => {
+    highlightedElement.classList.remove('highlight');
+  });
+
+  if (e.target !== desktop) return;
+
+  isSelecting = true;
+
+  startX =
+    e.type === 'touchstart'
+      ? e.touches[0].clientX - desktop.offsetLeft
+      : e.clientX - desktop.offsetLeft;
+  startY =
+    e.type === 'touchstart'
+      ? e.touches[0].clientY - desktop.offsetTop
+      : e.clientY - desktop.offsetTop;
+
+  selectionBox = document.createElement('div');
+  selectionBox.classList.add('selection-box');
+  selectionBox.style.left = `${startX}px`;
+  selectionBox.style.top = `${startY}px`;
+  desktop.appendChild(selectionBox);
+
+  document.body.style.userSelect = 'none';
+}
+
+function moveSelectionbox(e) {
+  if (!isSelecting & (document.querySelector('.selection-box') != null))
+    desktop.removeChild(document.querySelector('.selection-box')); // if it glitches remove the selectionbox left behind
+  if (!isSelecting || !selectionBox) return;
+
+  checkSelectionCollision();
+  const currentX =
+    e.type === 'touchmove'
+      ? e.touches[0].clientX - desktop.offsetLeft
+      : e.clientX - desktop.offsetLeft;
+  const currentY =
+    e.type === 'touchmove'
+      ? e.touches[0].clientY - desktop.offsetTop
+      : e.clientY - desktop.offsetTop;
+
+  const width = Math.abs(currentX - startX);
+  const height = Math.abs(currentY - startY);
+
+  selectionBox.style.left = `${Math.min(currentX, startX)}px`;
+  selectionBox.style.top = `${Math.min(currentY, startY)}px`;
+  selectionBox.style.width = `${width}px`;
+  selectionBox.style.height = `${height}px`;
+}
+
+function endSelectionbox(e) {
+  if (isSelecting) {
+    isSelecting = false;
+    if (selectionBox) {
+      desktop.removeChild(selectionBox);
+      selectionBox = null;
+    }
+    document.body.style.userSelect = '';
+  }
+}
+
+function checkSelectionCollision() {
+  if (!selectionBox) return;
+
+  const selectionRect = selectionBox.getBoundingClientRect();
+  const shortcuts = document.querySelectorAll('.desktop-shortcut');
+  shortcuts.forEach((shortcut) => {
+    const shortcutRect = shortcut.getBoundingClientRect();
+
+    // Check if the selection box overlaps with the shortcut
+    const isOverlapping = !(
+      (
+        selectionRect.right < shortcutRect.left || // No overlap on the right
+        selectionRect.left > shortcutRect.right || // No overlap on the left
+        selectionRect.bottom < shortcutRect.top || // No overlap on the bottom
+        selectionRect.top > shortcutRect.bottom
+      ) // No overlap on the top
+    );
+
+    if (isOverlapping) {
+      shortcut.classList.add('highlight');
+    } else {
+      shortcut.classList.remove('highlight');
+    }
+  });
+}
+
+let isSelecting = false;
+let selectionBox = null;
+let startX = 0;
+let startY = 0;
+
+desktop.addEventListener('mousedown', startSelectionbox);
+desktop.addEventListener('touchstart', startSelectionbox);
+
+desktop.addEventListener('mousemove', moveSelectionbox);
+desktop.addEventListener('touchmove', moveSelectionbox);
+
+desktop.addEventListener('mouseup', endSelectionbox);
+desktop.addEventListener('touchend', endSelectionbox);

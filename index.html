@@ -10,7 +10,20 @@
 
 <body>
 
-    <main class="desktop" onclick="clickedOutsideTaskbar()">
+    <main class="desktop" onmousedown="clickedOutsideTaskbar()">
+
+        <div class="desktop-shortcuts">
+            <button onclick="openWindow('AboutMe')" class="desktop-shortcut">
+                About Me
+            </button>
+            <button onclick="openWindow('Projects')" class="desktop-shortcut">
+                Projects
+            </button>
+            <button onclick="openWindow('TODO')" class="desktop-shortcut">
+                TODO
+            </button>
+        </div>
+
         <div class="center-text">
             <p class="day-text">WEDNESDAY</p>
             <p class="date-text">9 MAY, 2001</p>
@@ -134,7 +147,7 @@
     </main>
     <div class="taskbar">
         <button class="start-button" onclick="openTaskbarMenu('start-menu')">Start</button>
-        <div class="taskbar-middle-part" onclick="clickedOutsideTaskbar()"></div>
+        <div class="taskbar-middle-part" onmousedown="clickedOutsideTaskbar()"></div>
 
         <div class="start-menu hidden" id="start-menu">
             <button onclick="openWindow('AboutMe')">About Me</button>
@@ -159,19 +172,6 @@
             <h1>clock menu</h1>
         </div>
     </div>
-
-    <div class="desktop-shortcuts">
-        <button onclick="openWindow('AboutMe')">
-            About Me
-        </button>
-        <button onclick="openWindow('Projects')">
-            Projects
-        </button>
-        <button onclick="openWindow('TODO')">
-            TODO
-        </button>
-    </div>
-
     <script src="app.js"></script>
 </body>
 
