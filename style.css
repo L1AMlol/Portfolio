@@ -10,6 +10,7 @@
 :root {
     --taskbar-height: 40px;
     --titlebarheight: 30px;
+    --window-padding: 5%;
 }
 
 * {
@@ -23,6 +24,10 @@ body {
     background-size: cover;
     background-position: center;
     overflow: hidden;
+}
+
+h1, h2, h3, h4, h5, p {
+    overflow-wrap: break-word;
 }
 
 main {
@@ -63,7 +68,7 @@ main {
 .window {
     width: 300px;
     height: 400px;
-    min-width: 120px;
+    min-width: 170px;
     position: absolute;
     top: 50px;
     left: 50px;
@@ -99,14 +104,13 @@ main {
 
 .content-wrapper {
     overflow: auto;
-    height: calc(100% - var(--titlebarheight));
-    /* height: 100%; */
-    padding: 5%;
-    overflow-y: scroll;
+    max-height: calc(100% - var(--titlebarheight));
+    overflow-y: auto;
 }
 
 .content {
     height: calc(100% - var(--titlebarheight));
+    padding: 20px;
 }
 
 .resize-handle {
