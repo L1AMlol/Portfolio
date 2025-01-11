@@ -8,6 +8,9 @@ const startMenu = document.getElementById('start-menu');
 const clockMenu = document.getElementById('clock-menu');
 const volumeMenu = document.getElementById('volume-menu');
 
+// ----------------------- Window -----------------------
+let isHolding = false;
+
 function openWindow(windowId) {
   const win = document.getElementById(windowId);
   win.classList.remove('hidden');
@@ -69,6 +72,7 @@ windows.forEach((win) => {
     const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
     const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
 
+    isHolding = true;
     isDragging = true;
     offsetX = clientX - win.offsetLeft;
     offsetY = clientY - win.offsetTop;
@@ -99,6 +103,7 @@ windows.forEach((win) => {
   }
 
   function mouseUp(e) {
+    isHolding = false;
     isDragging = false;
     isResizing = false;
     document.body.style.cursor = 'default';
@@ -164,6 +169,8 @@ windows.forEach((win) => {
   resizeHandle.addEventListener('touchstart', resize);
 });
 
+// ----------------------- open en close taskbar stuff -----------------------
+
 function openTaskbarMenu(menuId) {
   const menu = document.getElementById(menuId);
   menu.classList.toggle('hidden');
@@ -192,6 +199,8 @@ function openClock() {
   clockMenu.classList.toggle('hidden');
 }
 
+// ----------------------- Timed events -----------------------
+
 function getTimeData() {
   const date = new Date();
   const dateInfo = {
@@ -213,7 +222,7 @@ function getTimeData() {
     ],
     months: [
       'JANUARY',
-      'FEBUARY',
+      'FEBRUARY',
       'MARCH',
       'APRIL',
       'MAY',
@@ -246,9 +255,11 @@ function formatCenterText(dateInfo) {
 }
 
 function formatClockIcon(dateInfo) {
-  document.querySelector(
-    '.tray-icon-hour'
-  ).innerHTML = `${dateInfo.hour}:${dateInfo.minutes}`;
+  document.querySelector('.tray-icon-hour').innerHTML = `${
+    dateInfo.hour < 10 ? '0' + String(dateInfo.hour) : dateInfo.hour
+  }:${
+    dateInfo.minutes < 10 ? '0' + String(dateInfo.minutes) : dateInfo.minutes
+  }`;
   document.querySelector(
     '.tray-icon-date'
   ).innerHTML = `${dateInfo.date}/${dateInfo.month}/${dateInfo.year}`;
@@ -261,12 +272,16 @@ setInterval(() => {
   formatClockIcon(dateInfo);
 }, 1000);
 
+// ----------------------- Selection Box -----------------------
+
 function startSelectionbox(e) {
   document.querySelectorAll('.highlight').forEach((highlightedElement) => {
     highlightedElement.classList.remove('highlight');
   });
 
-  if (e.target !== desktop) return;
+  if (e.target == desktop) return;
+  if (e.target in [...document.querySelectorAll('.grid-spot')]) return;
+  if (e.target == document.querySelector('.taskbar')) return;
 
   isSelecting = true;
 
@@ -292,6 +307,15 @@ function moveSelectionbox(e) {
   if (!isSelecting & (document.querySelector('.selection-box') != null))
     desktop.removeChild(document.querySelector('.selection-box')); // if it glitches remove the selectionbox left behind
   if (!isSelecting || !selectionBox) return;
+  if (finishedDragging & isSelecting) {
+    endSelectionbox();
+    finishedDragging = false;
+    return;
+  }
+  if (isHolding && isSelecting) {
+    endSelectionbox();
+    return;
+  }
 
   checkSelectionCollision();
   const currentX =
@@ -362,3 +386,75 @@ desktop.addEventListener('touchmove', moveSelectionbox);
 
 desktop.addEventListener('mouseup', endSelectionbox);
 desktop.addEventListener('touchend', endSelectionbox);
+
+document.addEventListener('keypress', (e) => {
+  if (e.key == 'Enter') {
+    const allSelected = document.querySelectorAll('.highlight');
+    allSelected.forEach((selected) => {
+      openWindow(selected.getAttribute('data-target'));
+    });
+  }
+});
+
+// ----------------------- Grid -----------------------
+
+let finishedDragging = false;
+
+function calculateGrid(e) {
+  const root = document.documentElement;
+  const container = document.querySelector('.desktop-shortcuts');
+  let containerRect = container.getBoundingClientRect();
+  let spotSize = getComputedStyle(root).getPropertyValue('--spot-width');
+  spotSize = spotSize.substring(0, spotSize.length - 2);
+
+  let containerWidth = containerRect.width;
+  let containerHeight = containerRect.height;
+
+  const numberOfRows = Math.floor(containerHeight / spotSize);
+  const numberOfCols = Math.floor(containerWidth / spotSize);
+
+  container.style.gridTemplateRows = `repeat(${numberOfRows}, var(--spot-width))`;
+  container.style.gridTemplateColumns = `repeat(${numberOfCols}, var(--spot-width))`;
+
+  let html = '';
+  for (i = 0; i < numberOfCols * numberOfRows; i++) {
+    let addShortcut = '';
+    if (i == 0) {
+      addShortcut = `<button onclick="openWindow('AboutMe')" draggable="true" class="desktop-shortcut" data-target="AboutMe">About Me</button>`;
+    } else if (i == numberOfCols) {
+      addShortcut = `<button onclick="openWindow('Projects')" draggable="true" class="desktop-shortcut" data-target="Projects">Projects</button>`;
+    } else if (i == numberOfCols * 2) {
+      addShortcut = `<button onclick="openWindow('TODO')" draggable="true" class="desktop-shortcut" data-target="TODO">TODO</button>`;
+    }
+    html += `<div class="grid-spot" id="${i}">${addShortcut}</div>`;
+  }
+  container.innerHTML = html;
+}
+
+window.addEventListener('resize', calculateGrid);
+calculateGrid();
+
+const shortcuts = document.querySelectorAll('.desktop-shortcut');
+const spots = document.querySelectorAll('.grid-spot');
+
+shortcuts.forEach((shortcut) => {
+  shortcut.addEventListener('dragstart', (e) => {
+    shortcut.classList.add('dragging');
+  });
+
+  shortcut.addEventListener('dragend', (e) => {
+    shortcut.classList.remove('dragging');
+    finishedDragging = true;
+  });
+});
+
+spots.forEach((spot) => {
+  spot.addEventListener('dragover', (e) => {
+    e.preventDefault();
+
+    const shortcut = document.querySelector('.dragging');
+    if (!spot.firstChild) {
+      spot.appendChild(shortcut);
+    }
+  });
+});
